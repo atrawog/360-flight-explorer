@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>ImageSplit</title>
+  <script src="Cesium/Cesium.js"></script>
+  <style>
+  @import url(Cesium/Widgets/CesiumWidget/CesiumWidget.css);
+
+  #cesiumContainer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      overflow: hidden;
+      padding: 0;
+      font-family: sans-serif;
+  }
+
+  #slider {
+    position: absolute;
+    left: 50%;
+    top: 0px;
+    background-color: #D3D3D3;
+    width: 2px;
+    height: 100%;
+    z-index: 9999;
+}
+
+#slider:hover {
+    cursor: ew-resize;
+}
+
+  body {
+      padding: 0;
+      margin: 0;
+      overflow: hidden;
+  }
+
+
+</style>
+</head>
+<body>
+  <div id="cesiumContainer"></div>
+  <script>
+
+  var viewer = new Cesium.Viewer('cesiumContainer', {
+      imageryProvider : new Cesium.ArcGisMapServerImageryProvider({
+          url : 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
+      }),
+      baseLayerPicker : false
+  });
+
+  var layers = viewer.imageryLayers;
+  var blackMarble = layers.addImageryProvider(Cesium.createTileMapServiceImageryProvider({
+      url : 'https://cesiumjs.org/blackmarble',
+      credit : 'Black Marble imagery courtesy NASA Earth Observatory',
+      flipXY : true // Only old gdal2tile.py generated tilesets need this flag.
+  }));
+  blackMarble.splitDirection = Cesium.ImagerySplitDirection.LEFT; // Only show to the left of the slider.
+
+  // Sync the position of the slider with the split position
+  var slider = document.getElementById('slider');
+  viewer.scene.imagerySplitPosition = (slider.offsetLeft) / slider.parentElement.offsetWidth;
+
+  var dragStartX = 0;
+
+  document.getElementById('slider').addEventListener('mousedown', mouseDown, false);
+  window.addEventListener('mouseup', mouseUp, false);
+
+  function mouseUp() {
+    window.removeEventListener('mousemove', sliderMove, true);
+  }
+
+  function mouseDown(e) {
+    var slider = document.getElementById('slider');
+    dragStartX = e.clientX - slider.offsetLeft;
+    window.addEventListener('mousemove', sliderMove, true);
+  }
+
+  function sliderMove(e) {
+    var slider = document.getElementById('slider');
+    var splitPosition = (e.clientX - dragStartX) / slider.parentElement.offsetWidth;
+    slider.style.left = 100.0 * splitPosition + "%";
+    viewer.scene.imagerySplitPosition = splitPosition;
+  }
+
+</script>
+</body>
+</html>
